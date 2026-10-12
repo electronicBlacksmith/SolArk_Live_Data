@@ -52,6 +52,11 @@ Start here:
   the Wi-Fi SSID and password**: the dongle prints them at every boot. Never
   print, grep-display, paste or commit boot-log lines; filter out
   `wifi_manager`/`spiffs_api` lines before showing console output.
+- **Leak-check hook:** `tools/hooks/install.sh <repo>` installs a pre-commit
+  hook (in this repo and the private data repo) that blocks commits containing
+  any secret derived from the raw captures. Install it on every machine.
+- Shareable capture data is produced only by `tools/scrub.py` and lives in the
+  private `solark-telemetry-data` repo (scrubbed, raw encrypted with age).
 - Nothing is posted upstream (issues/PRs) without the user approving the
   wording.
 

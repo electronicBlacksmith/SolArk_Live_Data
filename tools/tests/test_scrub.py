@@ -129,5 +129,22 @@ def test_short_secrets_ignored_to_avoid_false_positives():
     assert "ab" not in scrub.find_secrets(console, {}, set())
 
 
+def test_collect_secrets_across_capture_dirs(tmp_path):
+    a = tmp_path / "cap1"
+    a.mkdir()
+    (a / "Channel_2_ascii.txt").write_text("I (1) wifi_manager:   Password: hunter2-secret\n")
+    b = tmp_path / "cap2"
+    b.mkdir()
+    (b / "registers.csv").write_text(
+        "t,addr,fc,register,value_u16\n" + "".join(
+            f"1,1,3,{r},{v}\n" for r, v in {3: 0x5158, 4: 0x3752, 5: 0x5457, 6: 0x324B, 7: 0x3950}.items()))
+    secrets = scrub.collect_secrets(tmp_path, {3, 4, 5, 6, 7})
+    assert "hunter2-secret" in secrets and "QX7RTW2K9P" in secrets
+
+
+def test_collect_secrets_missing_dir_returns_empty(tmp_path):
+    assert scrub.collect_secrets(tmp_path / "nope", {3}) == []
+
+
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-q"]))

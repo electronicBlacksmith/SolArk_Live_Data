@@ -1,0 +1,9 @@
+#!/bin/sh
+# Blocks commits whose staged files contain secrets from raw Sol-Ark captures.
+# Paths come from git config (set by tools/hooks/install.sh), never hardcoded.
+TOOLS=$(git config --get solark.tools) || { echo "pre-commit: solark.tools not set; run tools/hooks/install.sh" >&2; exit 1; }
+CAPTURES=$(git config --get solark.captures) || { echo "pre-commit: solark.captures not set; run tools/hooks/install.sh" >&2; exit 1; }
+FILES=$(git diff --cached --name-only --diff-filter=ACM)
+[ -z "$FILES" ] && exit 0
+# shellcheck disable=SC2086
+exec "$TOOLS/.venv/bin/python" "$TOOLS/leakcheck.py" --captures "$CAPTURES" $FILES

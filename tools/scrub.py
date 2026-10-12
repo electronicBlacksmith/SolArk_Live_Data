@@ -132,6 +132,21 @@ def find_secrets(console: str, registers: dict[int, int], scrub: set[int]) -> li
     return sorted(s for s in secrets if len(s) >= MIN_SECRET_LEN)
 
 
+def collect_secrets(captures_root: Path, scrub: set[int]) -> list[str]:
+    """Secrets from every raw capture under captures_root (console + serial registers)."""
+    secrets: set[str] = set()
+    if not Path(captures_root).is_dir():
+        return []
+    for cdir in sorted(p for p in Path(captures_root).iterdir() if p.is_dir()):
+        console = "".join(p.read_text(errors="replace") for p in sorted(cdir.glob("*_ascii.txt")))
+        regs: dict[int, int] = {}
+        if (cdir / "registers.csv").exists():
+            for r in _read_csv(cdir / "registers.csv")[1]:
+                regs[int(r["register"])] = int(r["value_u16"])
+        secrets.update(find_secrets(console, regs, scrub))
+    return sorted(secrets)
+
+
 def verify_clean(out_dir: Path, secrets: list[str]) -> list[str]:
     hits = []
     for f in sorted(p for p in Path(out_dir).rglob("*") if p.is_file() and p.suffix != ".age"):
