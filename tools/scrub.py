@@ -13,7 +13,8 @@ Then every output file is checked for the secrets found in the *raw* inputs
 (Wi-Fi SSID/password, serial as text and as hex). Any hit deletes the output
 and exits non-zero. Secrets are never printed.
 
-Optionally encrypts the raw capture (capture.sal + meta.json) with age.
+Optionally encrypts the raw capture (capture.sal, meta.json and the unscrubbed
+registers/frames/console text, which leakcheck.py needs) with age.
 
 Usage: .venv/bin/python scrub.py <capture_dir> <out_dir> [--scrub-registers 3-7]
                                  [--console-allow scrub_console_allow.txt]
@@ -173,7 +174,9 @@ def _write_csv(p: Path, fields: list[str], rows: list[dict]) -> None:
 def encrypt_raw(cdir: Path, out: Path, recipient: str) -> None:
     buf = io.BytesIO()
     with tarfile.open(fileobj=buf, mode="w:gz") as tar:
-        for name in ("capture.sal", "meta.json"):
+        names = ["capture.sal", "meta.json", "registers.csv", "frames.csv"]
+        names += sorted(p.name for p in cdir.glob("*_ascii.txt"))
+        for name in names:  # text files let leakcheck derive secrets after decrypting
             if (cdir / name).exists():
                 tar.add(cdir / name, arcname=name)
     subprocess.run(["age", "-r", recipient, "-o", str(out)], input=buf.getvalue(), check=True)
@@ -185,7 +188,7 @@ def main() -> int:
     ap.add_argument("out_dir", type=Path)
     ap.add_argument("--scrub-registers", default="3-7")
     ap.add_argument("--console-allow", type=Path, default=DEFAULT_ALLOW)
-    ap.add_argument("--age-recipient", help="age public key; encrypts capture.sal+meta.json to raw.tar.gz.age")
+    ap.add_argument("--age-recipient", help="age public key; encrypts the raw capture (sal, meta, unscrubbed csv/console) to raw.tar.gz.age")
     args = ap.parse_args()
 
     cdir, out = args.capture_dir, args.out_dir

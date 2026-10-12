@@ -1,5 +1,9 @@
 """Tests for scrub.py, using synthetic data only (no real secrets in tests)."""
+import io
+import shutil
+import subprocess
 import sys
+import tarfile
 from pathlib import Path
 
 import pytest
@@ -144,6 +148,23 @@ def test_collect_secrets_across_capture_dirs(tmp_path):
 
 def test_collect_secrets_missing_dir_returns_empty(tmp_path):
     assert scrub.collect_secrets(tmp_path / "nope", {3}) == []
+
+
+@pytest.mark.skipif(shutil.which("age") is None, reason="age not installed")
+def test_encrypt_raw_roundtrip_includes_secret_sources(tmp_path):
+    key = tmp_path / "key.txt"
+    subprocess.run(["age-keygen", "-o", str(key)], check=True, capture_output=True)
+    pub = subprocess.run(["age-keygen", "-y", str(key)], check=True, capture_output=True, text=True).stdout.strip()
+    cap = tmp_path / "cap"
+    cap.mkdir()
+    for name in ("capture.sal", "meta.json", "Channel_2_ascii.txt", "registers.csv", "frames.csv"):
+        (cap / name).write_text(name)
+    out = tmp_path / "raw.tar.gz.age"
+    scrub.encrypt_raw(cap, out, pub)
+    plain = subprocess.run(["age", "-d", "-i", str(key), str(out)], check=True, capture_output=True).stdout
+    with tarfile.open(fileobj=io.BytesIO(plain), mode="r:gz") as tar:
+        assert sorted(tar.getnames()) == sorted(
+            ["capture.sal", "meta.json", "Channel_2_ascii.txt", "registers.csv", "frames.csv"])
 
 
 if __name__ == "__main__":
