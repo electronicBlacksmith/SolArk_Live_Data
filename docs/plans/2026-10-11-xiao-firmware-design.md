@@ -84,6 +84,13 @@ upstream files (`SolArk_DataInterceptor.ino`, etc.) and `tools/`.
 | `solark/<id>/status` | `online` / `offline` (LWT), `link_ok` / `link_stale` | yes |
 | `solark/<id>/health` | frames OK, CRC errors, unpaired, timeouts, exceptions, last-frame age, uptime, RSSI, free heap, reset reason, firmware version | no |
 | `solark/<id>/security` | security events (login failures, lockouts, OTA, config changes) | no |
+| `solark/<id>/writes` | every Modbus write seen on the link (fc06/fc16): `ts`, register, values, acknowledged or exception, decoded where known (e.g. clock sync at registers 22-24) | no |
+
+**Writes are observed, not just tolerated.** The dongle writes the inverter's
+clock at boot (verified), and app-initiated setting changes presumably travel
+the same way. Publishing them gives an audit trail of what the cloud changes on
+the inverter. The pairing logic handles fc06/fc16 request/acknowledgement pairs
+alongside reads.
 
 The raw topics let server-side consumers fix register meanings without
 reflashing.
@@ -249,6 +256,10 @@ Write the failing test first, every time.
 - Verify register meanings against the MySolArk app.
 - Confirm the XIAO ESP32S3 Plus flash and PSRAM sizes, which affect OTA
   partition layout and TLS memory.
+- A power-cycle capture showed the boot sequence: a one-off read of registers
+  0-29, a clock-sync write (fc16, 22-24), and a truncated frame at power loss.
+  Golden tests must include this capture (scrubbed: registers ~3-7 and
+  nothing from the console).
 - `op:2`/`op:3` (registers 42-47) are not periodic (absent from a 900 s
   capture). If needed, capture the dongle booting (start the capture, then
   plug the dongle in). Not needed for the MVP: the decoder handles any block

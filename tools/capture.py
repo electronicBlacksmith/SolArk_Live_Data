@@ -42,10 +42,13 @@ def main():
     ap.add_argument("--out", default=str(Path(__file__).resolve().parent.parent / "captures"))
     ap.add_argument("--launch", action="store_true", help="launch Logic 2 instead of connecting to a running one")
     ap.add_argument("--app", default=str(DEFAULT_APPIMAGE))
+    ap.add_argument("--label", default="", help="short tag appended to the capture folder name and saved in meta.json")
     args = ap.parse_args()
 
     channels = [int(c) for c in args.channels.split(",") if c.strip()]
-    out_dir = Path(args.out) / datetime.now().strftime("%Y%m%d-%H%M%S")
+    label = "".join(c if c.isalnum() or c in "-_" else "-" for c in args.label.strip())
+    stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    out_dir = Path(args.out) / (f"{stamp}-{label}" if label else stamp)
     out_dir.mkdir(parents=True, exist_ok=True)
 
     if args.launch:
@@ -87,6 +90,7 @@ def main():
 
     meta = {
         "started": datetime.now().isoformat(timespec="seconds"),
+        "label": args.label,
         "seconds": args.seconds,
         "sample_rate": args.rate,
         "threshold_volts": args.threshold,

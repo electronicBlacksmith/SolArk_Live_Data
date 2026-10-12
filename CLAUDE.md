@@ -48,6 +48,10 @@ Start here:
 - `captures/` is gitignored and must stay out of git. Raw captures contain the
   inverter serial number (registers ~3-7). Committed test fixtures must scrub
   that range.
+- **Console captures (`Channel_2_ascii.txt`, `.sal`, `digital.csv`) contain
+  the Wi-Fi SSID and password**: the dongle prints them at every boot. Never
+  print, grep-display, paste or commit boot-log lines; filter out
+  `wifi_manager`/`spiffs_api` lines before showing console output.
 - Nothing is posted upstream (issues/PRs) without the user approving the
   wording.
 

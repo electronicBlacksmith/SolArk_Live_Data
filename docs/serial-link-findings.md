@@ -53,6 +53,36 @@ is the ESP-IDF debug console (115200 8N1); **R** was idle.
   are probably from grounding or a loose clip, or switching-regulator noise.
   Real bits are 104 us wide, so the decode is unaffected.
 
+## Dongle power cycle (`captures/20261011-193820-unplug-replug`, 180 s)
+
+Unplugged at about t=17 s and replugged; link traffic resumed at t=76.7 s.
+
+- **Power loss truncates a frame.** One reply was cut mid-frame (35 bytes,
+  CRC fail) and one stray `00` appeared on the request line. CRC rejects both.
+  The firmware must tolerate this.
+- **Boot-only read:** `01 03 0000 001E` (registers 0-29) once at boot, then
+  the normal schedule (0x0x19 every 30 s, etc.).
+- **The dongle writes to the inverter: clock sync.** 11 s after the boot
+  read: `01 10 0016 0003 06 1A0A 0B13 272F` (fc16, registers 22-24), answered
+  by `01 10 0016 0003`. The bytes are packed as YY MM / DD hh / mm ss =
+  2026-10-11 19:39:47, **exactly the wall-clock time of that frame** (capture
+  start 19:38:20 + 87.6 s), in local time. **Verified.** So the link is not
+  read-only. The cloud/dongle can write, and any app-initiated setting change
+  would presumably appear as fc06/fc16 here too.
+- Registers 42-47 (`op:2`/`op:3`) were still not read, even at boot.
+- **Dongle identity, from the boot log:** ESP-IDF v3.3 bootloader; app
+  `R0.7.0.283.e6d6af9`, compiled **Oct 15 2025** (matches the firmware date
+  Sol-Ark support gave for the protocol change); hw `AEM2-0000-05`; 4 MB
+  flash with `factory` + `ota_0` + encrypted `storage` (SPIFFS) partitions;
+  cloud `iot.solarkcloud.com`, diagnostics `met.pvlimitless.com`;
+  `inverter_protocol: 1D`; Wi-Fi STA plus **AP always enabled**; LAN8720
+  Ethernet PHY.
+- **Security: the dongle prints the Wi-Fi SSID and password in plaintext on
+  the debug console at every boot.** Anyone with physical access to the
+  G/T/R header can read them. Treat every console capture as a secret
+  (`captures/` is gitignored and `chmod 700`). Never paste console boot logs
+  anywhere.
+
 ## Inferred (not verified)
 
 - Register meanings follow the Deye/Sunsynk single-phase hybrid map. The values
