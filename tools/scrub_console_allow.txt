@@ -1,0 +1,20 @@
+# Regexes for dongle console lines that are safe to keep (one per line).
+# Everything else is dropped; the dongle prints Wi-Fi credentials at boot.
+# Kept lines still get IPs, MACs and logged values redacted (see scrub.py).
+tcp_client: Config item
+tcp_client: Config version
+tcp_client: transitioning from com state
+tcp_client: recv server cmd len
+tcp_client: GW send server req cmd len
+tcp_client: (Bytes|Packets) (sent|received)
+tcp_client: Data RX on address
+tcp_header: Opcode
+gw_status:
+MB: Inverter status
+MB: <\d+> Characteristic #
+app_main: (free heap|system up time|App Version|Current WiFi TX power)
+app_init: (App version|Compile time)
+boot: (ESP-IDF|Partition Table|End of partition table|##|\s+\d+ \w+\s+\S+)
+rst:0x
+device_info: (dongle_hw_version|inverter_protocol)
+^\|\s+\S.*\|\s*$

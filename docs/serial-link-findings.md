@@ -82,6 +82,11 @@ Unplugged at about t=17 s and replugged; link traffic resumed at t=76.7 s.
   G/T/R header can read them. Treat every console capture as a secret
   (`captures/` is gitignored and `chmod 700`). Never paste console boot logs
   anywhere.
+- **Security: the dongle's always-on hotspot appears to use a trivially
+  guessable default password** (a second `wifi_manager` password field in the
+  boot log; value deliberately not recorded). Anyone in Wi-Fi range of the
+  inverter can likely join the dongle's own network. Not yet verified by
+  scanning for the AP.
 
 ## Inferred (not verified)
 

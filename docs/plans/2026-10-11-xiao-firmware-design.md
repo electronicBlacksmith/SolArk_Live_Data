@@ -84,6 +84,8 @@ upstream files (`SolArk_DataInterceptor.ino`, etc.) and `tools/`.
 | `solark/<id>/status` | `online` / `offline` (LWT), `link_ok` / `link_stale` | yes |
 | `solark/<id>/health` | frames OK, CRC errors, unpaired, timeouts, exceptions, last-frame age, uptime, RSSI, free heap, reset reason, firmware version | no |
 | `solark/<id>/security` | security events (login failures, lockouts, OTA, config changes) | no |
+| `solark/<id>/changes` | version change or settings diff: old and new versions, per-register before/after | no |
+| `solark/<id>/capture/<session>` | chunked raw recording from the anomaly recorder | no |
 | `solark/<id>/writes` | every Modbus write seen on the link (fc06/fc16): `ts`, register, values, acknowledged or exception, decoded where known (e.g. clock sync at registers 22-24) | no |
 
 **Writes are observed, not just tolerated.** The dongle writes the inverter's
@@ -97,6 +99,40 @@ reflashing.
 
 **Consumer contract:** do not act on data when `status` is `link_stale` or
 `age_s` exceeds the consumer's limit; fall back to a safe default.
+
+### Change and update recorder
+
+Goal: an audit trail of what the cloud changes on the inverter, including
+inverter firmware updates (presumably delivered over this same link; the
+method is unknown), so regressions can be traced.
+
+- **Version tracking.** The firmware watches configurable "version"
+  registers (candidates are in the boot-time 0-29 block; to be identified).
+  On any change it publishes `solark/<id>/changes`: the old and new versions,
+  plus a diff of every known register before and after (the last full snapshot
+  vs the first full snapshot after the change).
+- **Settings diffs.** Every write (fc06/fc16) is published on `writes`; the
+  30 s settings blocks are also diffed, so changes made by any path show up.
+- **Anomaly capture.** Triggers (all configurable):
+  - writes beyond the known clock-sync pattern
+  - unknown function codes
+  - a run of CRC/framing failures (suggests a baud change, e.g. bootloader
+    mode)
+  - traffic volume well above the learned schedule
+  - link silence followed by a different pattern
+
+  When a trigger fires, the firmware records the raw timestamped bytes from
+  both lines into a pre-allocated ring buffer, including a configurable
+  pre-trigger window. It switches the RX UARTs to automatic baud detection if
+  framing fails, and streams the recording to `solark/<id>/capture/<session>`
+  in chunks. A server-side subscriber reassembles it for offline analysis with
+  `tools/analyze.py`.
+- **Limits (stated honestly).** This reveals *that* firmware changed, *what
+  register-visible behavior* changed, and the raw update traffic. Interpreting
+  the firmware contents is out of scope.
+- **Privacy.** Recordings contain the inverter serial and are sensitive. They
+  go only to the TLS-protected broker under the device ACL and must be
+  scrubbed before archiving to a repo.
 
 ## 4. Configuration (standing rule: nothing changeable is hardcoded)
 
@@ -115,6 +151,7 @@ reflashing.
 |---|---|
 | Link | RX pin for each direction, baud (9600), framing (8N1), slave address filter (1), frame gap (3.5 chars, derived), RX glitch filter |
 | Timing | reply timeout (500 ms), burst-end quiet (500 ms), stale threshold (30 s) |
+| Recorder | version registers, anomaly triggers and thresholds, ring buffer size, pre-trigger window, chunk size, autobaud on/off |
 | Register map | entries of name, register, words (1/2), signed, scale, offset, unit, `verified` flag; editable in the UI |
 | MQTT | host, port, TLS, CA/cert pin, user, password, client id, topic prefix (`solark`), device id (from MAC), QoS, enabled topics, health interval (60 s) |
 | Network | ordered Wi-Fi list, hostname, DHCP or static, setup AP SSID and password, AP timeout, no-Wi-Fi fallback delay, reconnect backoff base and cap |
