@@ -1,6 +1,7 @@
 # Sol-Ark 15K dongle serial link: capture findings (2026-10-11)
 
-Captures: `captures/20261011-182536` (10 s), `captures/20261011-182712` (180 s).
+Captures: `captures/20261011-182536` (10 s), `captures/20261011-182712` (180 s),
+`captures/20261011-191812` (900 s; confirms the 180 s results).
 Tools: `tools/capture.py`, `tools/analyze.py` (see `tools/README_capture.md`).
 
 ## Tap points (verified by continuity)
@@ -27,6 +28,9 @@ is the ESP-IDF debug console (115200 8N1); **R** was idle.
 - Pad 10 carries only requests and pad 9 only replies, so the **dongle is the
   master** and the inverter is slave **address 1**. Only **function 03** (read
   holding registers) was seen, with no writes and no exceptions in 180 s.
+  The 900 s capture matches exactly: 510/510 requests answered, 100% CRC, the
+  same 11 blocks at the same 10 s / 30 s intervals, and no writes or
+  exceptions.
   Replies arrive 24-26 ms after each request.
 - Polled blocks (start register, count, interval):
 
@@ -68,8 +72,12 @@ is the ESP-IDF debug console (115200 8N1); **R** was idle.
   `(op, at, fc, addr, rn)`:
   - `op:0` (10 s): 59x66, 150x50, 312x8
   - `op:1` (30 s): 15x1, 20x2, 25x34, 200x100, 300x16, 320x100, 433x55
-  - `op:2`: 44x4, and `op:3`: 42x2. Neither appeared on the wire in 180 s, so
-    `op` 2 and 3 are probably slower or event-driven schedules (unverified).
+  - `op:2`: 44x4, and `op:3`: 42x2. Neither appeared on the wire in 180 s or
+    900 s. The console's characteristic list has only 11 entries (`10s_0..2`,
+    `30s_0..7`), so `op` 2/3 are not periodic polls. They are probably
+    read-once-at-boot or on-demand/write operations (unverified). The 900 s
+    capture started about 6 min after the dongle booted, so a boot-time read
+    would have been missed.
   - The list and the wire differ. The wire also shows 0x19 every 30 s, which
     isn't in the list (perhaps a built-in dongle poll), and the wire shows 20x5
     where the list says 20x2. Trust the wire.

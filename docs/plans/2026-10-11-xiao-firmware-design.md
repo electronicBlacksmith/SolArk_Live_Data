@@ -249,6 +249,7 @@ Write the failing test first, every time.
 - Verify register meanings against the MySolArk app.
 - Confirm the XIAO ESP32S3 Plus flash and PSRAM sizes, which affect OTA
   partition layout and TLS memory.
-- Work out what poll schedules `op:2`/`op:3` mean (registers 42-47). Next
-  step: a 15-minute capture (`capture.py --seconds 900`), then 60 minutes if
-  42-47 still don't appear.
+- `op:2`/`op:3` (registers 42-47) are not periodic (absent from a 900 s
+  capture). If needed, capture the dongle booting (start the capture, then
+  plug the dongle in). Not needed for the MVP: the decoder handles any block
+  generically.

@@ -13,6 +13,7 @@ pass --launch to start it.
 import argparse
 import json
 import os
+import signal
 import sys
 import time
 from datetime import datetime
@@ -74,7 +75,12 @@ def main():
         t0 = time.time()
         with manager.start_capture(device_id=dev.device_id, device_configuration=dev_cfg,
                                    capture_configuration=cap_cfg) as capture:
-            capture.wait()
+            try:
+                capture.wait()
+            except KeyboardInterrupt:
+                # Otherwise Logic 2 keeps recording after this script exits.
+                capture.stop()
+                print("Interrupted; recording stopped, saving partial capture...")
             print(f"Capture done in {time.time()-t0:.1f}s; saving...")
             capture.save_capture(str(out_dir / "capture.sal"))
             capture.export_raw_data_csv(str(out_dir), digital_channels=channels)
@@ -91,5 +97,10 @@ def main():
     print(f"Next: .venv/bin/python analyze.py {out_dir}")
 
 
+def _raise_interrupt(signum, frame):
+    raise KeyboardInterrupt
+
+
 if __name__ == "__main__":
+    signal.signal(signal.SIGTERM, _raise_interrupt)  # treat kill/pkill like Ctrl-C
     main()
