@@ -301,3 +301,59 @@ Write the failing test first, every time.
   capture). If needed, capture the dongle booting (start the capture, then
   plug the dongle in). Not needed for the MVP: the decoder handles any block
   generically.
+
+## Pre-plan research decisions (2026-10-12)
+
+Research notes live in [`docs/research/`](../research/).
+
+- **ESP-IDF version: v6 spike first.** The first task in the implementation
+  plan is a time-boxed (~1 day) board-crate spike on ESP-IDF v6.0.3. It must
+  show (1) Wi-Fi + MQTT over TLS with the external `mqtt` component and
+  mbedTLS in PSRAM, (2) an on-device self-signed P-256 certificate serving one
+  HTTPS page, (3) PBKDF2 through mbedTLS, timed per 10k iterations, and (4)
+  two RX-only UARTs with the RX idle timeout. All pass: use v6. Any blocker:
+  fall back to v5.5.5 and record why. The ESP-IDF version is set only in the
+  board crate's config. Rationale: [`rust-toolchain.md`](../research/rust-toolchain.md) §1.2;
+  migrating later would rewrite the mbedTLS 3→4 security FFI code.
+- **XIAO chip facts (read from the board with `esptool flash-id` and
+  `espefuse summary`, read-only, 2026-10-12):** ESP32-S3 (QFN56) rev v0.2,
+  40 MHz crystal, **16 MB quad flash (3.3 V)**, **8 MB embedded PSRAM**
+  (vendor AP_3v3). That package and size are the ESP32-S3R8, whose embedded
+  PSRAM is **octal** (Espressif ordering info; inferred from the part, not
+  probed), so GPIO33-37 are taken by PSRAM. USB is USB-Serial/JTAG.
+  eFuses are factory-clean: no secure boot, no flash encryption, all key
+  blocks unused, JTAG and download mode enabled.
+- **Database writes stay server-side.** The device speaks only MQTT. A
+  separate server-side subscriber (Telegraf or a small `tools/` writer next
+  to Mosquitto) writes to whatever database is chosen and stores `raw/<start>`
+  too, so history can be re-decoded when register meanings are corrected. Why:
+  no DB credentials on a physically exposed device (flash is readable until
+  eFuse lockdown), one ACL-scoped outbound connection, DB choice changes
+  without reflashing.
+- **Store-and-forward backfill buffer (v1, user decision: "save as much as
+  possible").** Replaces "keep only the latest `state`" on broker or Wi-Fi
+  loss.
+  - **Record:** every paired raw block (start, count, values, timestamp) in a
+    compact binary form, about 185 KB/h (about 4.4 MB/day) at the current
+    schedule. `state` can be re-derived from it.
+  - **Tier 1:** a PSRAM ring (default about 4 MB, about 20 h).
+  - **Tier 2:** when PSRAM fills, or periodically while offline, spill to a
+    dedicated flash data partition (default about 5 MB, about 24 h). It
+    survives reboot and power loss. The ring layout is naturally
+    wear-leveling, and flash is written only while offline. Records carry a
+    CRC and sequence number, and torn writes at power loss are detected and
+    skipped.
+  - **Overflow:** when both tiers are full, drop the oldest data, count it,
+    and report it in `health`.
+  - **Replay:** on reconnect, live data goes first. Backfill is published on
+    `solark/<id>/backfill/<start>` (never on `state` or `raw`, so the charging
+    controller can't act on old data) at QoS 1. A record is deleted only
+    after PUBACK, and replay is rate-limited.
+  - **Timestamps:** wall-clock (SNTP) when known. Records made before the
+    first time sync carry boot id plus monotonic time and are corrected to
+    wall-clock once sync happens.
+  - **Config:** enabled, PSRAM size, flash spill on/off, replay rate,
+    max age, chunk size.
+  - **Partition table:** the 16 MB layout needs a `backfill` data partition
+    (the size is a build-time partition choice; runtime config can use less
+    of it).

@@ -1,0 +1,41 @@
+%% Sol-Ark dongle passive tap: wiring overview (refdes match README.md / schematic.svg)
+flowchart LR
+  subgraph DONGLE["Dongle PCB (existing)"]
+    DB9P9["J2 DB9 pin 9 (+12 V) [M]"]
+    DB9P5["J2 DB9 pin 5 (GND) [M]"]
+    PAD9["H1 pad 9 R1OUT (resp)"]
+    PAD10["H1 pad 10 T1IN (req)"]
+    PAD6["H1 pad 6 GND"]
+    PAD7["H1 pad 7 VCC: measure only"]
+  end
+
+  subgraph HARNESS["Harness (removable)"]
+    F1["F1 MF-R050 PTC, at DB9 joint"]
+    R1["R1 10k AT pad"]
+    R2["R2 10k AT pad"]
+    P1["P1 / J1 1x6 2.54 mm, key = pin 3"]
+  end
+
+  subgraph CARRIER["Carrier perfboard"]
+    D1["D1 1N5819"] --> N12["+12V_P: TVS1 P6KE22A, C1 33uF, C2 100nF"]
+    N12 --> U2["U2 Pololu D24V10F5"]
+    U2 --> D2["D2 1N5822 (backfeed)"]
+    D2 --> N5["+5V_X: C3 100uF, C4 10uF"]
+    R3["R3 1k"]
+    R4["R4 1k"]
+    U1["U1 XIAO ESP32S3 Plus"]
+    DNP["R12 + JP1: DNP, TX reservation, NOT connected"]
+  end
+
+  DB9P9 --> F1 -->|"W1 26 AWG red"| P1
+  DB9P5 -->|"W2 26 AWG black"| P1
+  PAD9 --> R1 -->|"W3 30 AWG Kynar (twist)"| P1
+  PAD10 --> R2 -->|"W4 30 AWG Kynar (twist)"| P1
+  PAD6 -->|"W5 30 AWG Kynar (twist)"| P1
+  P1 -->|"pin 1"| D1
+  P1 -->|"pin 2 / pin 4 GND"| U1
+  P1 -->|"pin 5"| R3 -->|"D0 / GPIO1 UART1 RX"| U1
+  P1 -->|"pin 6"| R4 -->|"D1 / GPIO2 UART2 RX"| U1
+  N5 -->|"5V pad 14 (= USB VBUS)"| U1
+  U1 -.->|"D9 / GPIO8"| DNP
+  U1 ---|"U.FL"| ANT1["ANT1 Molex 146153-0100 FPC"]
