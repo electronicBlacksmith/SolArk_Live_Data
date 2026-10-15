@@ -1,0 +1,4 @@
+#VRML V2.0 utf8
+# Approximate box model: DFN1006-2L, 0.4 mm.
+Shape { appearance Appearance { material Material { diffuseColor 0.20 0.20 0.20 } }
+ geometry IndexedFaceSet { solid FALSE coord Coordinate { point [ -0.1969 -0.1181 0.0000, 0.1969 -0.1181 0.0000, -0.1969 0.1181 0.0000, 0.1969 0.1181 0.0000, -0.1969 -0.1181 0.1575, 0.1969 -0.1181 0.1575, -0.1969 0.1181 0.1575, 0.1969 0.1181 0.1575 ] } coordIndex [ 0, 2, 3, 1, -1, 4, 5, 7, 6, -1, 0, 1, 5, 4, -1, 2, 6, 7, 3, -1, 0, 4, 6, 2, -1, 1, 3, 7, 5, -1 ] } }

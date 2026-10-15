@@ -1,0 +1,27 @@
+[package]
+name = "idf-v6-spike"
+version = "0.0.0"
+edition = "2021"
+rust-version = "1.88"
+
+[workspace]
+
+[profile.release]
+opt-level = "s"
+debug = false
+
+[profile.dev]
+opt-level = "s"
+
+[dependencies]
+esp-idf-svc = { version = "=0.53.0", features = ["experimental"] }
+esp-idf-hal = "=0.47.0"
+esp-idf-sys = "=0.38.1"
+log = "0.4"
+anyhow = "1"
+
+[build-dependencies]
+embuild = "0.33"
+
+[[package.metadata.esp-idf-sys.extra_components]]
+remote_component = { name = "espressif/mqtt", version = "1.*" }

@@ -1,5 +1,7 @@
 # Hardware build guide: passive Modbus tap (XIAO ESP32S3 Plus in the Sol-Ark dongle)
 
+> Custom JLCPCB carrier board (replaces the protoboard): [`../../hardware/carrier/README.md`](../../hardware/carrier/README.md)
+
 Status: Rev A, 2026-10-12. Build package for the hardware in
 [`../plans/2026-10-11-xiao-firmware-design.md`](../plans/2026-10-11-xiao-firmware-design.md) §1.
 Primary input: [`../research/hardware-electrical.md`](../research/hardware-electrical.md) (cited as "EL §n").

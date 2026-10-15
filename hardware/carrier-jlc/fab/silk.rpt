@@ -1,0 +1,17 @@
+silk violations: 0
+mark U2 ok (PCB_SHAPE 0.19 mm from pad 1)
+mark U3 ok (PCB_SHAPE 0.24 mm from pad 1)
+mark D1 ok (PCB_SHAPE 0.19 mm from pad 1)
+mark D2 ok (PCB_SHAPE 0.19 mm from pad 1)
+mark TVS1 ok (PCB_SHAPE 0.19 mm from pad 1)
+text F.Silkscreen: 12V
+text B.Silkscreen: 12V
+text B.Silkscreen: G
+text B.Silkscreen: G
+text B.Silkscreen: 9
+text B.Silkscreen: FOAM TAPE
+text B.Silkscreen: 10
+text B.Silkscreen: SolArk carrier rev B
+text B.Silkscreen: 12V OFF FOR USB
+text B.Silkscreen: (or USB isolator)
+text B.Silkscreen: USB
