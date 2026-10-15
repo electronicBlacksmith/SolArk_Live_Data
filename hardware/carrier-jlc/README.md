@@ -172,7 +172,7 @@ The header line is from PRICING.md (read 2026-10-13).
    - HASL (with lead), or LeadFree HASL if RoHS is wanted (ENIG works but costs more);
    - Via Covering "Plugged" ("Tented" is greyed out for 4-layer).
 3. Turn on PCB Assembly:
-   - **Economic**, top side, assemble **2**;
+   - **Economic**, top side, assemble **5** (about $9.74 more than 2; never Standard, which adds edge rails);
    - **Confirm Parts Placement = Yes**;
    - **Tooling holes = "Added by Customer"**. TH1/TH2 are already in the Gerbers: 1.152 mm NPTH
      with 0.148 mm mask expansion, centres 2.0 mm from the top edge and 2.0 mm from the left and

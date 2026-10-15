@@ -12,7 +12,7 @@ The UT3232G (MAX3232-type) uses only channel 1. On the 10-pin module header
 | Header pad | UT3232G pin | Signal |
 |---|---|---|
 | 6 | 15 | GND |
-| 7 | 16 | VCC (not yet measured under power) |
+| 7 | 16 | VCC: 3.278 V to pad 6, under power [V, user multimeter, 2026-10-14] |
 | 9 | 12 R1OUT | inverter -> dongle (TTL) |
 | 10 | 11 T1IN | dongle -> inverter (TTL) |
 | 8 | - | no carrier-side connection |

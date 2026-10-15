@@ -2,6 +2,8 @@
 
 The user must measure or decide these. Measurements come first: items 1-3 could change the layout.
 
+**Status 2026-10-14: ordered** (5 boards, all assembled, Economic PCBA). Items 2-7 are settled by the user's measurements below [V, user]; items 8-9c were checked in JLC's preview, and JLC's post-order DFM review is still to read.
+
 ## Decisions
 
 1. **The harness is soldered into J1 (5 wire pads); there is no connector on the board.**
@@ -13,20 +15,26 @@ The user must measure or decide these. Measurements come first: items 1-3 could 
 2. **Header spacer on or off.** Each option has a hard condition:
    - **Off: a Kapton shim is required.** The top 1.70 mm header rings clear the XIAO Plus underside pads 15-23 by only 0.049 mm when flush (VERIFY-revB.md), so the XIAO must never sit on bare copper. Shim: 0.06-0.2 mm of polyimide, i.e. 1-3 layers of the kit tape (Bertech PPTA-1/2, 0.064 mm per layer), over both header rows. Stack 7.4-7.5 mm.
    - **On: only if the measured height passes.** 9.8 mm with the assumed 4.9 mm XIAO, over the 9.0 mm limit. It is allowed only if item 4 measures the XIAO at 4.1 mm or less (0.8 + 1.6 + 2.5 + XIAO at most 9.0).
+   - **Settled 2026-10-14: spacer off, Kapton shim.** The XIAO measured 4.52 mm (item 4), so spacer-on is 9.42 mm, over the limit. Spacer-off stack: 0.8 + 1.6 + 0.06-0.2 + 4.52 = 6.98-7.12 mm.
    - Either way, trim the post tails to 0.8 mm under the board, and the posts above the XIAO.
 3. **Assemble 2 or all 5.** All 5 costs about $9.74 more (PRICING.md). Check the order form's PCBA-quantity box: that you can assemble 2 of 5 boards is inferred, not confirmed on JLC's pages.
+   - **Settled 2026-10-14: all 5 assembled.** Quote $73.37; paid $50.68 with economy shipping (about $3) and a $10 coupon [V, user].
 
 ## Measure
 
 4. **XIAO ESP32S3 Plus overall height**, including the USB-C and the mated U.FL. 4.9 mm is assumed [I]. Also measure the dongle cavity depth and footprint.
+   - **Measured 2026-10-14 [V, user]: 4.52 mm**, the USB-C being the tallest part; the mated U.FL plug is lower. Cavity: a little over 31 x 31 x 9 mm, so the 27 x 27 board fits with about 2 mm per side and the 7.1 mm stack leaves about 1.9 mm.
 5. **Harness wire exit and strain relief.** The wires leave vertically from pads along the bottom edge. Check:
    - that the bend fits the cavity;
    - the glue or tape point for strain relief.
+   - **Dropped 2026-10-14** (user: "I'm not too worried about this").
 6. **Tap logic level.** Measure UT3232G VCC (pad 7) under power ("not yet measured" in `docs/serial-link-findings.md`).
    - D3/D4 (VBR 5.6 V minimum) and U3 (5.5 V operating) assume the level is 5.5 V or less.
    - If it is 3.3 V, this is all margin.
    - If it is over 5.5 V, stop and redesign.
+   - **Measured 2026-10-14 [V, user]: 3.278 V** (pad 7 to pad 6). All margin.
 7. **12 V rail maximum** at the DB9 under all inverter states. TVS1 starts conducting at about 20 V. If the rail can exceed about 17 V, use SMF24A.
+   - **Measured 2026-10-14 [V, user]: 12.098 V DC** (one reading). Well under 17 V: TVS1 stays SMF18A.
 
 ## Confirm in JLC's order preview (Confirm Parts Placement = Yes)
 
